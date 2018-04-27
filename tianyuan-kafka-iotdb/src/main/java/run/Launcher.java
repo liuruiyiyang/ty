@@ -15,6 +15,7 @@ import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.Utils;
+import conf.IoTDBConfig;
 import dao.Connection;
 import dao.IoTDBDaoFactory;
 import dao.KmxDaoFactory;
@@ -22,6 +23,7 @@ import dao.KmxDaoFactory;
 import dao.imp.IoTDBDao;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.log4j.Logger;
 import storm.ConsumerSpout;
 import storm.IoTDBTransferAndStoreBolt;
 
@@ -38,26 +40,41 @@ public class Launcher {
 	private static org.apache.kafka.clients.consumer.KafkaConsumer<String,  byte[]> consumer;
 	private static IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
 	private static final String DEFAULT_PATH_PREFIX = "root";
-	public  static final int consumerNum = 20;
+	public  static final int consumerNum = 40;
+	static Logger logger = Logger.getLogger(Launcher.class);
 
 	public static void main(String[] args) throws IOException, AlreadyAliveException, InvalidTopologyException {
-		// TODO Auto-generated method stub
+		if(args.length > 1) {
+			IoTDBConfig.builder().setHost(args[0]);
+		}
 		//new Launcher().launch(args);
         Launcher.launchMulThreadsWithoutStormV2();
 	}
 
 
     public static void launchMulThreadsWithoutStormV2(){
+		System.out.print(new Date(System.currentTimeMillis()) + ";");
 		System.out.println("[元数据获取]开始连接Oracle数据库获取元数据，约三分钟...");
+		logger.info("[元数据获取]开始连接Oracle数据库获取元数据，约三分钟...");
 		try {
 			MetaData.getInstance().updateMaps();
+			System.out.print(new Date(System.currentTimeMillis()) + ";");
+			System.out.println("[元数据获取]连接Oracle数据库获取元数据完成");
+			logger.info("[元数据创建]开始连接IoTDB数据库创建时间序列元数据");
+			System.out.print(new Date(System.currentTimeMillis()) + ";");
+			System.out.println("[元数据创建]开始创建IoTDB元数据");
+			MetaData.getInstance().createStorageGroup();
+			MetaData.getInstance().createTimeSeriesSchema();
+			System.out.print(new Date(System.currentTimeMillis()) + ";");
+			System.out.println("[数据写入]开始向IoTDB写入数据");
+			ConsumerThreadV2 consumerThread = new ConsumerThreadV2();
+			consumerThread.start(consumerNum);
 		} catch (SQLException e) {
 			System.out.println("[转换失败]连接Oracle数据库查找元数据失败");
+			logger.info("[转换失败]连接Oracle数据库查找元数据失败");
 			e.printStackTrace();
 		}
-		System.out.println("[元数据获取]连接Oracle数据库获取元数据完成");
-        ConsumerThreadV2 consumerThread = new ConsumerThreadV2();
-        consumerThread.start(consumerNum);
+
     }
 
 	public void launch(String args[]) throws IOException, AlreadyAliveException, InvalidTopologyException {

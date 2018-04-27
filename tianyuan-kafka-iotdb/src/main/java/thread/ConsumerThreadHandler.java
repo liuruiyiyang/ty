@@ -13,6 +13,7 @@ import util.MetaData;
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.Iterator;
 
 public class ConsumerThreadHandler implements Runnable {
@@ -58,6 +59,7 @@ public class ConsumerThreadHandler implements Runnable {
         try {
             statement = connection.createStatement();
         } catch (SQLException e) {
+            System.out.print(new Date(System.currentTimeMillis()) + ";");
             System.out.println("[转换失败]IoTDB连接失败");
         }
 
@@ -88,7 +90,7 @@ public class ConsumerThreadHandler implements Runnable {
                                 Constants.STORAGE_GROUP_PREFIX + deviceSeries,
                                 Constants.DEVICE_PREFIX + deviceNO,
                                 Constants.SENSOR_PREFIX + sensorName,
-                                "\"" + sensorValue + "\"",
+                                "\"" + sensorValue.replaceAll("\"", "\\\\\"").replaceAll("\'", "\\\\\'") + "\"",
                                 timeStamp);
                     } else {
                         sql = createInsertSQLStatment(
@@ -104,6 +106,7 @@ public class ConsumerThreadHandler implements Runnable {
                         count++;
                         totalPoints++;
                     } catch (SQLException e) {
+                        System.out.print(new Date(System.currentTimeMillis()) + ";");
                         System.out.println("[转换失败]IoTDB添加批写入语句失败");
                         e.printStackTrace();
                     }
@@ -115,6 +118,7 @@ public class ConsumerThreadHandler implements Runnable {
             }
 
             try {
+                System.out.print(new Date(System.currentTimeMillis()) + ";");
                 System.out.println("[数据存储]IoTDB执行批写入，语句数：" + count);
                 statement.executeBatch();
             } catch (BatchUpdateException e) {
@@ -124,6 +128,7 @@ public class ConsumerThreadHandler implements Runnable {
                         errorNum++;
                     }
                 }
+                System.out.print(new Date(System.currentTimeMillis()) + ";");
                 System.out.println("[数据存储]IoTDB批写入执行失败，失败数：" + errorNum);
                 e.printStackTrace();
             } catch (SQLException e) {
@@ -142,6 +147,7 @@ public class ConsumerThreadHandler implements Runnable {
                 e.printStackTrace();
             }
             if(hasNull){
+                System.out.print(new Date(System.currentTimeMillis()) + ";");
                 System.out.println("[转换失败]设备系列或传感器类型为空："+nullNum);
             }
         }
@@ -158,6 +164,7 @@ public class ConsumerThreadHandler implements Runnable {
         builder.append(time);
         builder.append(",").append(value);
         builder.append(")");
+        System.out.print(new Date(System.currentTimeMillis()) + ";");
         System.out.println("sql:   " + builder.toString());
         return builder.toString();
     }

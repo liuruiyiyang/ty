@@ -1,8 +1,6 @@
 package util;
 
-import clojure.lang.Cons;
 import conf.Constants;
-import dao.Connection;
 import dao.IoTDBDaoFactory;
 import dao.imp.IoTDBDao;
 import oracle.jdbc.OracleConnection;
@@ -12,10 +10,7 @@ import org.apache.log4j.Logger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class MetaData {
     static Logger logger = Logger.getLogger(MetaData.class);
@@ -29,6 +24,7 @@ public class MetaData {
     private static HashMap<String,HashMap<String,String>> seriesSensorTypeMap = new HashMap<>();
     private static HashMap<String, HashMap<String, String>> typeEncodingMap = new HashMap<>();
     private static final String createStatementSQL = "create timeseries %s with datatype=%s, encoding=%s";
+    private static final String setStorageLevelSQL = "set storage group to %s";
     private final String ENCODING = "ENCODING";
     private final String DATA_TYPE = "DATA_TYPE";
     private final int CREATE_SCHEMA_BATCH_SIZE = 1000;
@@ -124,12 +120,49 @@ public class MetaData {
 
     }
 
+    public void createStorageGroup(){
+        System.out.println("[元数据创建]开始连接IoTDB创建存储组");
+        java.sql.Connection connection = dao.getConnection();
+        try {
+            statement = connection.createStatement();
+        } catch (SQLException e) {
+            System.out.println("[元数据创建失败]IoTDB连接失败");
+        }
+        if(statement!=null) {
+            for (String seriesID : seriesIDList) {
+                String storageGroup = Constants.ROOT + "." + Constants.STORAGE_GROUP_PREFIX + seriesID;
+                String sql = String.format(setStorageLevelSQL, storageGroup);
+                try {
+                    statement.execute(sql);
+                    System.out.print(new Date(System.currentTimeMillis()) + ";");
+                    System.out.println("sql: " + sql);
+                    logger.info("[元数据创建]执行存储组创建语句:" + sql);
+                } catch (SQLException e) {
+                    System.out.print(new Date(System.currentTimeMillis()) + ";");
+                    System.out.println("[元数据创建失败]存储组创建语句执行失败:" + sql);
+                    logger.info("[元数据创建失败]存储组创建语句执行失败:" + sql);
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("[元数据创建]连接IoTDB创建存储组完成");
+            try {
+                statement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Can`t close statement when setting storage group");
+            }
+        }else{
+            System.out.println("[元数据创建失败]IoTDB连接statement为null");
+        }
+
+    }
+
     public void createTimeSeriesSchema(){
         java.sql.Connection connection = dao.getConnection();
         try {
             statement = connection.createStatement();
         } catch (SQLException e) {
-            System.out.println("[转换失败]IoTDB连接失败");
+            System.out.println("[元数据创建失败]IoTDB连接失败");
         }
         long count = 0;
         for(Map.Entry<String,String> entry: seriesIDMap.entrySet()){
@@ -148,7 +181,8 @@ public class MetaData {
                     System.out.println("time Series count = " + count);
                     logger.info("time Series count = " + count);
                     logger.info("create schema sql: " + SQL);
-                    System.out.println(SQL);
+                    System.out.print(new Date(System.currentTimeMillis()) + ";");
+                    System.out.println("create schema sql: " + SQL);
                 }
             } else {
                 System.out.println("can not find " + entry.getValue() + " in seriesSensorTypeMap.");
@@ -160,6 +194,7 @@ public class MetaData {
             statement.clearBatch();
             statement.close();
         } catch (SQLException e) {
+            System.out.println("error occurred in the last batch");
             logger.warn("error occurred in the last batch");
         }
     }
@@ -171,11 +206,13 @@ public class MetaData {
             try {
                 statement.executeBatch();
             } catch (SQLException e) {
+                System.out.println("Can`t execute batch when creating timeseries ");
                 logger.warn("Can`t execute batch when creating timeseries ");
             }
             try {
                 statement.clearBatch();
             } catch (SQLException e) {
+                System.out.println("Can`t clear batch when creating timeseries ");
                 logger.warn("Can`t clear batch when creating timeseries ");
             }
 
@@ -183,6 +220,7 @@ public class MetaData {
             try {
                 statement.addBatch(sql);
             } catch (SQLException e) {
+                System.out.println("Can`t add batch when creating timeseries");
                 logger.warn("Can`t add batch when creating timeseries");
             }
         }

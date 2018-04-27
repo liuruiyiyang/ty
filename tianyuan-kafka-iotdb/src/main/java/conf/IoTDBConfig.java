@@ -4,7 +4,7 @@ import com.sagittarius.write.internals.BasicMonitor;
 import com.sagittarius.write.internals.Monitor;
 
 
-public class IoTDBConfig {
+public class  IoTDBConfig {
     private String host;
     private String port;
     private String user;
@@ -42,7 +42,9 @@ public class IoTDBConfig {
 
     private IoTDBConfig(){
         this.monitor = new BasicMonitor();
-        this.host = "192.168.10.57";
+        //this.host = "192.168.10.57";
+        //this.host = "166.111.7.246";
+        this.host = "192.168.130.20";
         this.port = "6667";
         this.user = "root";
         this.passwd = "root";
@@ -54,7 +56,7 @@ public class IoTDBConfig {
         private IoTDBConfig config = new IoTDBConfig();
 
         public Builder(){
-
+            
         }
 
         public IoTDBConfig build(){
