@@ -14,7 +14,7 @@ import java.util.*;
 
 public class MetaData {
     static Logger logger = Logger.getLogger(MetaData.class);
-    private static IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
+    // private static IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
     final static String DB_URL = "jdbc:oracle:thin:@192.168.10.50:1521/ptmro";
     final static String DB_USER = "monitor211";
     final static String DB_PASSWORD = "mn";
@@ -122,6 +122,7 @@ public class MetaData {
 
     public void createStorageGroup(){
         System.out.println("[元数据创建]开始连接IoTDB创建存储组");
+        IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
         java.sql.Connection connection = dao.getConnection();
         try {
             statement = connection.createStatement();
@@ -158,6 +159,7 @@ public class MetaData {
     }
 
     public void createTimeSeriesSchema(){
+        IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
         java.sql.Connection connection = dao.getConnection();
         try {
             statement = connection.createStatement();

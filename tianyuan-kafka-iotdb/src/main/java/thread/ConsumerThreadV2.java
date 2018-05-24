@@ -1,10 +1,13 @@
 package thread;
 
 import com.alibaba.fastjson.JSONObject;
+import conf.Constants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -49,16 +52,29 @@ public class ConsumerThreadV2 {
         consumer = new org.apache.kafka.clients.consumer.KafkaConsumer<String, byte[]>(config);
         consumer.subscribe(Arrays.asList((String)config.get("topic")));
         consumer.seekToBeginning(consumer.assignment());
+        System.out.print(new Date(System.currentTimeMillis()) + ";");
+        System.out.println("ConsumerThreadV2 初始化完毕");
 
     }
 
-    public void start(int threadNumber){
+    public void start(int threadNumber, String db_name){
+        System.out.print(new Date(System.currentTimeMillis()) + ";");
+        System.out.println("ConsumerThreadV2 执行 start()");
         executor = new ThreadPoolExecutor(threadNumber,threadNumber,0L, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
-        while (true){
-            ConsumerRecords<String, byte[]> records = consumer.poll(100);
-            for (ConsumerRecord<String, byte[]> record : records) {
-                executor.submit(new ConsumerThreadHandler(record));
+        if(db_name.equals(Constants.IOTDB)) {
+            while (true) {
+                ConsumerRecords<String, byte[]> records = consumer.poll(100);
+                for (ConsumerRecord<String, byte[]> record : records) {
+                    executor.submit(new ConsumerThreadHandler(record));
+                }
+            }
+        } else {
+            while (true) {
+                ConsumerRecords<String, byte[]> records = consumer.poll(100);
+                for (ConsumerRecord<String, byte[]> record : records) {
+                    executor.submit(new ConsumerThreadHandlerInfluxDB(record));
+                }
             }
         }
     }
