@@ -61,7 +61,7 @@ public class ConsumerThreadV2 {
         System.out.print(new Date(System.currentTimeMillis()) + ";");
         System.out.println("ConsumerThreadV2 执行 start()");
         executor = new ThreadPoolExecutor(threadNumber,threadNumber,0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
+                new ArrayBlockingQueue<>(500), new ThreadPoolExecutor.CallerRunsPolicy());
         if(db_name.equals(Constants.IOTDB)) {
             while (true) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(100);

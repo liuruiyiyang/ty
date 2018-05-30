@@ -16,6 +16,7 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.Utils;
 import conf.Constants;
+import conf.InfluxDBConfig;
 import conf.IoTDBConfig;
 import dao.Connection;
 import dao.IoTDBDaoFactory;
@@ -41,20 +42,31 @@ public class Launcher {
 	// private static org.apache.kafka.clients.consumer.KafkaConsumer<String,  byte[]> consumer;
 	// private static IoTDBDao dao = IoTDBDaoFactory.getIoTDBDao();
 	// private static final String DEFAULT_PATH_PREFIX = "root";
-	public  static int consumerNum = 40;
+	public  static int consumerNum = 1;
 	static Logger logger = Logger.getLogger(Launcher.class);
 
-	public static void main(String[] args) throws IOException, AlreadyAliveException, InvalidTopologyException {
+	public static void main(String[] args) throws SQLException, IOException, AlreadyAliveException, InvalidTopologyException {
+		String dbswitch = "iotdb";
 		if(args.length > 1) {
 			consumerNum = Integer.parseInt(args[0]);
 			IoTDBConfig.builder().setHost(args[1]);
-			//not yet set influxdb host
+			InfluxDBConfig.getInstance().setHost(args[1]);
+			dbswitch = args[2];
 		}
 		System.out.print(new Date(System.currentTimeMillis()) + ";");
 		System.out.println("[启动]使用多线程数：" + consumerNum);
 		//new Launcher().launch(args);
-        //Launcher.launchMulThreadsWithoutStormV2();
-		Launcher.launchMulThreadsWithoutStormInfluxDB();
+
+		switch (dbswitch) {
+			case "influxdb":
+				Launcher.launchMulThreadsWithoutStormInfluxDB();
+				break;
+			case "iotdb":
+				Launcher.launchMulThreadsWithoutStormV2();
+				break;
+			default:
+				throw new SQLException("unsupported database: " + dbswitch);
+		}
 	}
 
 	public static void launchMulThreadsWithoutStormInfluxDB(){

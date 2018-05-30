@@ -1,6 +1,7 @@
 package thread;
 
 
+import conf.InfluxDBConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.influxdb.dto.BatchPoints;
 import ty.pub.BeanUtil;
@@ -26,7 +27,7 @@ public class ConsumerThreadHandlerInfluxDB implements Runnable {
 
     public ConsumerThreadHandlerInfluxDB(ConsumerRecord consumerRecord) {
         this.record = consumerRecord;
-        String INFLUX_URL="http://127.0.0.1:8086";
+        String INFLUX_URL="http://" + InfluxDBConfig.getInstance().getHost() + ":8086";
         String INFLUX_DB_NAME="kafka";
         InfluxURL = INFLUX_URL;
         InfluxDBName = INFLUX_DB_NAME;
@@ -144,7 +145,7 @@ public class ConsumerThreadHandlerInfluxDB implements Runnable {
             System.out.println("[连接失败]InfluxDB连接失败");
         }
         System.out.println("[数据存储]类型为空占比："+100.0f * nullPoints / totalPoints + "%");
-
+        influxDB.close();
 
     }
 
