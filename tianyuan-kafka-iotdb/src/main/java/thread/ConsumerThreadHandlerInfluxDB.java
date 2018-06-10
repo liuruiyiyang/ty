@@ -136,7 +136,7 @@ public class ConsumerThreadHandlerInfluxDB implements Runnable {
                 System.out.println("[数据存储]InfluxDB批写入执行失败，失败数：" + errorNum);
                 e.printStackTrace();
             }
-            influxDB.close();
+            //influxDB.close();
             if (hasNull) {
                 System.out.print(new Date(System.currentTimeMillis()) + ";");
                 System.out.println("[转换失败]设备系列或传感器类型为空：" + nullNum);
@@ -146,6 +146,7 @@ public class ConsumerThreadHandlerInfluxDB implements Runnable {
             System.out.println("[连接失败]InfluxDB连接失败");
         }
         System.out.println("[数据存储]类型为空占比："+100.0f * nullPoints / totalPoints + "%");
+        influxDB.flush();
         influxDB.close();
 
     }
