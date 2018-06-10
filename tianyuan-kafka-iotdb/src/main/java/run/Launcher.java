@@ -46,12 +46,14 @@ public class Launcher {
 	static Logger logger = Logger.getLogger(Launcher.class);
 
 	public static void main(String[] args) throws SQLException, IOException, AlreadyAliveException, InvalidTopologyException {
+		//nohup java -jar TransToIoTDB-jar-with-dependencies.jar 8 127.0.0.1 influxdb 10 &
 		String dbswitch = "iotdb";
 		if(args.length > 1) {
 			consumerNum = Integer.parseInt(args[0]);
 			IoTDBConfig.builder().setHost(args[1]);
 			InfluxDBConfig.getInstance().setHost(args[1]);
 			dbswitch = args[2];
+			InfluxDBConfig.getInstance().setDelay(Long.parseLong(args[3]));
 		}
 		System.out.print(new Date(System.currentTimeMillis()) + ";");
 		System.out.println("[启动]使用多线程数：" + consumerNum);

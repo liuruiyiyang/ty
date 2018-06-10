@@ -33,13 +33,14 @@ public class ConsumerThreadHandlerInfluxDB implements Runnable {
         InfluxDBName = INFLUX_DB_NAME;
         influxDB = org.influxdb.InfluxDBFactory.connect(InfluxURL);
 
-        if (influxDB.databaseExists(InfluxDBName)) {
-            influxDB.setDatabase(InfluxDBName);
-        } else {
-            influxDB.createDatabase(InfluxDBName);
-        } //thread safety may need to be checked
+        //thread safety may need to be checked
+//        if (influxDB.databaseExists(InfluxDBName)) {
+//            influxDB.setDatabase(InfluxDBName);
+//        } else {
+//            influxDB.createDatabase(InfluxDBName);
+//        }
 
-
+        influxDB.setDatabase(InfluxDBName);
 
     }
 

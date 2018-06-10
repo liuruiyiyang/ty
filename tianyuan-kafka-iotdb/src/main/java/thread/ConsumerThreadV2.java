@@ -2,6 +2,7 @@ package thread;
 
 import com.alibaba.fastjson.JSONObject;
 import conf.Constants;
+import conf.InfluxDBConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -59,9 +60,9 @@ public class ConsumerThreadV2 {
 
     public void start(int threadNumber, String db_name){
         System.out.print(new Date(System.currentTimeMillis()) + ";");
-        System.out.println("ConsumerThreadV2 执行 start()");
+        System.out.println("ConsumerThreadV2 执行 start(), delay =" + InfluxDBConfig.getInstance().getDelay());
         executor = new ThreadPoolExecutor(threadNumber,threadNumber,0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(500), new ThreadPoolExecutor.CallerRunsPolicy());
+                new ArrayBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
         if(db_name.equals(Constants.IOTDB)) {
             while (true) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(100);
@@ -74,7 +75,15 @@ public class ConsumerThreadV2 {
                 ConsumerRecords<String, byte[]> records = consumer.poll(100);
                 for (ConsumerRecord<String, byte[]> record : records) {
                     executor.submit(new ConsumerThreadHandlerInfluxDB(record));
+
+                    try {
+                        Thread.sleep(InfluxDBConfig.getInstance().getDelay());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                 }
+
             }
         }
     }
